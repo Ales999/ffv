@@ -1,10 +1,10 @@
 module github.com/ales999/ffv
 
-go 1.22.5
+go 1.22
 
 require (
 	github.com/alecthomas/kong v0.9.0
-	github.com/ales999/cisaccs v0.0.14
+	github.com/ales999/cisaccs v0.0.15
 )
 
 require (

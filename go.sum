@@ -4,8 +4,8 @@ github.com/alecthomas/kong v0.9.0 h1:G5diXxc85KvoV2f0ZRVuMsi45IrBgx9zDNGNj165aPA
 github.com/alecthomas/kong v0.9.0/go.mod h1:Y47y5gKfHp1hDc7CH7OeXgLIpp+Q2m1Ni0L5s3bI8Os=
 github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc=
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
-github.com/ales999/cisaccs v0.0.14 h1:Rt3tXM4V3ZVYq+SsNcV4KNxd+6HOuFBrS6snVrL1pJ0=
-github.com/ales999/cisaccs v0.0.14/go.mod h1:Ikw0pS1Mmb4obFAWZKRaHDiaAcv9BDHuVXRwliGROzs=
+github.com/ales999/cisaccs v0.0.15 h1:XsI+Up1S/8yKbuWD7w+Q+7nTnzdCrB9GXT0/CCEKaSo=
+github.com/ales999/cisaccs v0.0.15/go.mod h1:XgG5UreNWl9yE6N3Dq55NUfThEqzArcRjywgakhSIAk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
