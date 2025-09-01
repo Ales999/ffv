@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"github.com/alecthomas/kong"
-	"github.com/ales999/cisaccs"
+	"github.com/ales999/cisaccs/v2"
 	"github.com/ales999/ffv/utils"
 )
 
@@ -18,9 +18,9 @@ var cli struct {
 	// Номер порта для ssh
 	PortSsh int `help:"SSH порт для доступа к cisco" short:"p" default:"22"`
 	// Путь к файлу конфигурации имя_cisco/группа/ip - env: CISFILE
-	CisFileName string `help:"Путь к файлу конфигурации имя_cisco/группа/ip" default:"/etc/cisco/cis.yaml" env:"CISFILE"`
+	CisFileName string `help:"Путь к файлу конфигурации имя_cisco/группа/ip" default:"/etc/cisco/cis.yaml" env:"CIS2FILE"`
 	// Путь к файлу конфигурации имя_группы/имя/пароль - env: CISPWDS
-	PwdFileName string `help:"Путь к файлу конфигурации имя_группы/имя/пароль" default:"/etc/cisco/passw.json" env:"CISPWDS"`
+	PwdFileName string `help:"Путь к файлу конфигурации имя_группы/имя/пароль" default:"/etc/cisco/passw.json" env:"CIS2PWDS"`
 }
 
 //var skipVlans []string
