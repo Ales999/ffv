@@ -11,18 +11,13 @@ import (
 )
 
 var cli struct {
-	// Обязательный аргумент - список cisco хостов к которым будем подключаться
 	CheckHosts []string `arg:"" name:"hosts" help:"Name of cisco hosts for finded IP"`
-	// Флаг на уникальность вывода
 	UniqueOutput bool `help:"Вывод будет один общий" short:"u" default:"false"`
-	// Номер порта для ssh
 	PortSsh int `help:"SSH порт для доступа к cisco" short:"p" default:"22"`
-	// Путь к файлу конфигурации имя_cisco/группа/ip - env: CISFILE
 	CisFileName string `help:"Путь к файлу конфигурации имя_cisco/группа/ip" default:"/etc/cisco/cis.yaml" env:"CIS2FILE"`
-	// Путь к файлу конфигурации имя_группы/имя/пароль - env: CISPWDS
 	PwdFileName string `help:"Путь к файлу конфигурации имя_группы/имя/пароль" default:"/etc/cisco/passw.json" env:"CIS2PWDS"`
-	// Флаг для вывода используемых VLAN
 	UsedOutput bool `help:"Вывод используемых VLAN" short:"r" default:"false"`
+	PrintCount bool `help:"Показать общее количество" short:"c" default:"false"`
 }
 
 //var skipVlans []string
@@ -58,6 +53,7 @@ func findUsedVlan(hosts []string) error {
 
 	acc := cisaccs.NewCisAccount(cli.CisFileName, cli.PwdFileName)
 	hstcount := len(hosts)
+	totalPrinted := 0
 
 	for _, hst := range hosts {
 		cisout, err := acc.OneCisExecuteSsh(hst, cli.PortSsh, cmds)
@@ -66,38 +62,45 @@ func findUsedVlan(hosts []string) error {
 			continue
 		}
 
+		hostVlans := []utils.VlanLineData{}
 		for _, line := range cisout {
 			_nvl := utils.ParseVlan(line)
 			if _nvl.GetId() == 0 {
 				continue
 			}
-			vlans = append(vlans, _nvl)
+			hostVlans = append(hostVlans, _nvl)
 		}
 
-		if !cli.UniqueOutput && vlans != nil {
+		if !cli.UniqueOutput {
 			if hstcount == 1 {
-				for _, v := range vlans {
+				for _, v := range hostVlans {
 					v.PrintData()
 				}
 			} else {
 				fmt.Println("----------")
 				fmt.Println(hst, ":")
-				for _, v := range vlans {
+				for _, v := range hostVlans {
 					v.PrintData()
 				}
 			}
-			vlans = nil
-			vlans = []utils.VlanLineData{}
+			totalPrinted += len(hostVlans)
+		} else {
+			vlans = append(vlans, hostVlans...)
 		}
 
 	}
 
 	if cli.UniqueOutput && vlans != nil {
 		printUniqueVlans(vlans)
+		totalPrinted = countUnique(vlans)
 	} else if !cli.UniqueOutput && len(vlans) > 0 {
 		for _, v := range vlans {
 			v.PrintData()
 		}
+	}
+
+	if totalPrinted > 0 {
+		fmt.Printf("Всего количество используемых = %d\n", totalPrinted)
 	}
 
 	return nil
@@ -112,17 +115,21 @@ func sortVlanSlice(vlans []utils.VlanLineData) {
 func printUniqueVlans(vlans []utils.VlanLineData) {
 	sortVlanSlice(vlans)
 	var seen = make(map[int]bool)
-	var unique []utils.VlanLineData
 	for _, v := range vlans {
 		id := v.GetId()
 		if !seen[id] {
 			seen[id] = true
-			unique = append(unique, v)
+			fmt.Printf("ID %d, Name: %s\n", id, v.GetName())
 		}
 	}
-	for _, v := range unique {
-		v.PrintData()
+}
+
+func countUnique(vlans []utils.VlanLineData) int {
+	var seen = make(map[int]bool)
+	for _, v := range vlans {
+		seen[v.GetId()] = true
 	}
+	return len(seen)
 }
 
 func findFreeVlan(hosts []string) error {
