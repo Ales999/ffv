@@ -48,12 +48,11 @@ func main() {
 
 func findUsedVlan(hosts []string) error {
 
-	var vlans []utils.VlanLineData
+	var allVlans []utils.VlanLineData
 	cmds := []string{"sh vlan br"}
 
 	acc := cisaccs.NewCisAccount(cli.CisFileName, cli.PwdFileName)
 	hstcount := len(hosts)
-	totalPrinted := 0
 
 	for _, hst := range hosts {
 		cisout, err := acc.OneCisExecuteSsh(hst, cli.PortSsh, cmds)
@@ -83,24 +82,28 @@ func findUsedVlan(hosts []string) error {
 					v.PrintData()
 				}
 			}
-			totalPrinted += len(hostVlans)
+			allVlans = append(allVlans, hostVlans...)
 		} else {
-			vlans = append(vlans, hostVlans...)
+			allVlans = append(allVlans, hostVlans...)
 		}
 
 	}
 
-	if cli.UniqueOutput && vlans != nil {
-		printUniqueVlans(vlans)
-		totalPrinted = countUnique(vlans)
-	} else if !cli.UniqueOutput && len(vlans) > 0 {
-		for _, v := range vlans {
-			v.PrintData()
-		}
+	if cli.UniqueOutput && allVlans != nil {
+		printUniqueVlans(allVlans)
 	}
 
-	if totalPrinted > 0 {
-		fmt.Printf("Всего количество используемых = %d\n", totalPrinted)
+	if cli.PrintCount {
+		var usedCount int
+		var totalLabel string
+		if cli.UniqueOutput {
+			usedCount = countUnique(allVlans)
+			totalLabel = "Всего уникальное количество используемых"
+		} else {
+			usedCount = len(allVlans)
+			totalLabel = "Всего количество используемых"
+		}
+		fmt.Printf("%s = %d\n", totalLabel, usedCount)
 	}
 
 	return nil
@@ -134,64 +137,62 @@ func countUnique(vlans []utils.VlanLineData) int {
 
 func findFreeVlan(hosts []string) error {
 
-	var vlans []utils.VlanLineData
-	// Что будем выполнять на cisco
+	var allVlans []utils.VlanLineData
 	cmds := []string{"sh vlan br"}
 
-	// Подготовка к подключению.
 	acc := cisaccs.NewCisAccount(cli.CisFileName, cli.PwdFileName)
-
-	// Количество хостов в списке на получение данных
 	hstcount := len(hosts)
 
-	// Пробегаем по всем хостам
 	for _, hst := range hosts {
-		//vlans = []string{} // Масив vlan-ов
-		// Получаем данные с каждого хоста подключаясь к каждому по очереди.
 		cisout, err := acc.OneCisExecuteSsh(hst, cli.PortSsh, cmds)
 		if err != nil {
 			fmt.Println(err.Error())
 			continue
 		}
 
-		// Парсим чего выдали нам cisco
+		hostVlans := []utils.VlanLineData{}
 		for _, line := range cisout {
-			// Парсим строку
 			_nvl := utils.ParseVlan(line)
-			// Проверка что запись не пустая
 			if _nvl.GetId() == 0 {
 				continue
 			}
-			// Если строка не пуста - добавляем
-			vlans = append(vlans, _nvl)
-		}
-		// Если нет уникального вывода то печатаем все подрят, по одному хосту.
-		if !cli.UniqueOutput && vlans != nil {
-			// Выполняем поиск свободных vlal-ов
-			fr := GenerateRange(&vlans)
-			// Если хост один.
-			if hstcount == 1 {
-				// Печать результата
-				PrintFreeRange(&fr)
-			} else {
-				// Выводим имя хоста
-				fmt.Println("----------")
-				fmt.Println(hst, ":")
-				// Печать результата
-				PrintFreeRange(&fr)
-			}
-			// Удалаяем все из среза
-			vlans = nil
-			vlans = []utils.VlanLineData{}
+			hostVlans = append(hostVlans, _nvl)
 		}
 
-	} // End for hosts
-	// Если список не пустой, значит нам нужнен уникальный список по всем хостам
-	if cli.UniqueOutput && vlans != nil {
-		// Выполняем поиск свободных vlal-ов в общем списке
-		fr := GenerateRange(&vlans)
-		// Печать результата
+		if !cli.UniqueOutput {
+			fr := GenerateRange(&hostVlans)
+			if hstcount == 1 {
+				PrintFreeRange(&fr)
+			} else {
+				fmt.Println("----------")
+				fmt.Println(hst, ":")
+				PrintFreeRange(&fr)
+			}
+			allVlans = append(allVlans, hostVlans...)
+		} else {
+			allVlans = append(allVlans, hostVlans...)
+		}
+
+	}
+
+	if cli.UniqueOutput && allVlans != nil {
+		fr := GenerateRange(&allVlans)
 		PrintFreeRange(&fr)
+	}
+
+	if cli.PrintCount {
+		var freeCount int
+		var totalLabel string
+		if cli.UniqueOutput {
+			uniqueUsed := countUnique(allVlans)
+			freeCount = 4092 - uniqueUsed
+			totalLabel = "Всего уникальное количество свободных"
+		} else {
+			totalUsed := len(allVlans)
+			freeCount = 4092 - totalUsed
+			totalLabel = "Всего количество свободных"
+		}
+		fmt.Printf("%s = %d\n", totalLabel, freeCount)
 	}
 
 	return nil
